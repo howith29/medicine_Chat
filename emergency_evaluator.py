@@ -73,12 +73,18 @@ class EmergencyEvaluator:
     # 의도분석 결과를 바탕으로 응급도 평가 
     def evaluate_emergency_level(self, analysis_result):
 
-        if analysis_result.get('query_type') != 'side_effect':
+        # 응급 키워드 우선 체크
+        emergency_keywords = analysis_result.get('emergency_keywords', [])
+        critical_keywords = ['119','응급실','호흡곤란','의식잃음','경련']
+
+        has_emergency_keyword = any(kw in emergency_keywords for kw in critical_keywords)
+
+        if not has_emergency_keyword and analysis_result.get('query_type') != 'side_effect':
             return {
                 'level':0,
                 'action': "일반 상담",
                 'description':'응급도 평가 대상 아님',
-                'reasoning':'부작용 상담이 아닙니다',
+                'reasoning':'부작용 상담이 아니며, 응급 키워드 없습니다.',
                 'matched_keywords':[]
             }
         
@@ -106,108 +112,108 @@ class EmergencyEvaluator:
             level_scores[level] = score
             matched_keywords[level] = matched
 
-            print(f"레벨 점수: {level_scores}")
+        print(f"레벨 점수: {level_scores}")
 
-            max_level = 1
-            max_score = 0
+        max_level = 1
+        max_score = 0
 
             # 가장 높은 레벨 선택
-            for level, score in level_scores.items():
-                if score > max_score:
-                    max_score = score
-                    max_level = level
+        for level, score in level_scores.items():
+            if score > max_score:
+                max_score = score
+                max_level = level
 
             # 매칭 키워드 없는 경우 level 2 (일반 부작용)
-            if max_score == 0:
-                max_level = 2
-                reasoning = "일반적인 부작용으로 추정"
-                final_matched = []
-            else:
-                reasoning = f"Level {max_level} 키워드 매칭: {matched_keywords[max_level]}"
-                final_matched = matched_keywords[max_level]
+        if max_score == 0:
+            max_level = 2
+            reasoning = "일반적인 부작용으로 추정"
+            final_matched = []
+        else:
+            reasoning = f"Level {max_level} 키워드 매칭: {matched_keywords[max_level]}"
+            final_matched = matched_keywords[max_level]
 
-            result = {
-                'level': max_level,
-                'action': self.emergency_levels[max_level]['action'],
-                'description': self.emergency_levels[max_level]['description'],
-                'reasoning': reasoning,
-                'matched_keywords': final_matched
-            }
-            print(f"응급도 평가 결과: Level {max_level}")
+        result = {
+            'level': max_level,
+            'action': self.emergency_levels[max_level]['action'],
+            'description': self.emergency_levels[max_level]['description'],
+            'reasoning': reasoning,
+            'matched_keywords': final_matched
+        }
+        print(f"응급도 평가 결과: Level {max_level}")
 
-            return result
+        return result
         
-        # 응급도에 따른 응답
-        def get_response(self, emergency_result):
-            level = emergency_result['level']
+    # 응급도에 따른 응답
+    def get_response(self, emergency_result):
+        level = emergency_result['level']
 
-            if level >= 5:
-                return """
-                 응급 상황 감지
-                 {base_answer}
-                 응급도: Level {level} - {description}
-                {action}
-
-                - 119 신고 또는 가장 가까운 응급실 방문
-                - 약물 복용 즉시 중단
-                - 증상 변화 주의 깊게 관찰
-
-                주의: 이는 의료진의 진단을 대체할 수 없습니다.
-                """
-            elif level >=4:
-                return """
-                주의 필요
+        if level >= 5:
+            return """
+                응급 상황 감지
                 {base_answer}
                 응급도: Level {level} - {description}
-                {action}
+            {action}
 
-                - 약물 복용 즉시 중단
-                - 당일 내 병원 응급실 또는 응급진료 방문
-                - 증상 악화 시 즉시 119 신고
+            - 119 신고 또는 가장 가까운 응급실 방문
+            - 약물 복용 즉시 중단
+            - 증상 변화 주의 깊게 관찰
 
-                주의: 이는 의료진의 진단을 대체할 수 없습니다. 증상이 악화되면 즉시 응급실을 방문하세요.
+            주의: 이는 의료진의 진단을 대체할 수 없습니다.
+            """
+        elif level >=4:
+            return """
+            주의 필요
+            {base_answer}
+            응급도: Level {level} - {description}
+            {action}
 
-                """
-            elif level >= 3:
-                return """
-                병원 방문 권장
-                {base_answer}
-                응급도: Level {level} - {description}
-                {action}
+            - 약물 복용 즉시 중단
+            - 당일 내 병원 응급실 또는 응급진료 방문
+            - 증상 악화 시 즉시 119 신고
 
-                - 약물 복용 중단 고려
-                - 1-2일 내 병원 방문
-                - 증상 지속/악화 시 더 빨리 방문
-                주의: 이는 의료진의 진단을 대체할 수 없습니다. 증상이 심해지면 더 빨리 의료진과 상담하세요.
-                """
-            
-            elif level >= 2:
-                return """
-                경과 관찰
-                {base_answer}
-                응급도: Level {level} - {description}
-                {action}
+            주의: 이는 의료진의 진단을 대체할 수 없습니다. 증상이 악화되면 즉시 응급실을 방문하세요.
 
-                - 약물 복용 일시 중단
-                - 충분한 수분 섭취
-                - 2-3일 경과 관찰
-                - 증상 지속 시 병원 방문
-                주의: 이는 의료진의 진단을 대체할 수 없습니다. (참고) 대부분 시간이 지나면 호전됩니다.
+            """
+        elif level >= 3:
+            return """
+            병원 방문 권장
+            {base_answer}
+            응급도: Level {level} - {description}
+            {action}
 
-                """
-            
-            else:
-                return """
-                일반 상담
-                {base_answer}
-                응급도: Level {level} - {description}
-                {action}
+            - 약물 복용 중단 고려
+            - 1-2일 내 병원 방문
+            - 증상 지속/악화 시 더 빨리 방문
+            주의: 이는 의료진의 진단을 대체할 수 없습니다. 증상이 심해지면 더 빨리 의료진과 상담하세요.
+            """
+        
+        elif level >= 2:
+            return """
+            경과 관찰
+            {base_answer}
+            응급도: Level {level} - {description}
+            {action}
 
-                - 증상 경과 관찰
-                - 필요시 의료진 상담
+            - 약물 복용 일시 중단
+            - 충분한 수분 섭취
+            - 2-3일 경과 관찰
+            - 증상 지속 시 병원 방문
+            주의: 이는 의료진의 진단을 대체할 수 없습니다. (참고) 대부분 시간이 지나면 호전됩니다.
 
-                (참고) 일반적인 의료 상담입니다.
-               """
+            """
+        
+        else:
+            return """
+            일반 상담
+            {base_answer}
+            응급도: Level {level} - {description}
+            {action}
+
+            - 증상 경과 관찰
+            - 필요시 의료진 상담
+
+            (참고) 일반적인 의료 상담입니다.
+            """
 
 
 # 응급도 평가 테스트
