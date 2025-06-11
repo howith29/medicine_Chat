@@ -163,7 +163,7 @@ def main():
     rag = MedicalRAGSystem()
 
     try:
-        documents = rag.load_csv_data('')
+        documents = rag.load_csv_data('C:\LLM_project\drug_info.csv')
         split_docs = rag.split_documents(chunk_size=300, chunk_overlap=30)
         vectorstore = rag.create_vectorstore(split_docs)
         qa_chain = rag.setup_qa_chain()

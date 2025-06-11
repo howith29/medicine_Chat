@@ -107,10 +107,10 @@ class CompleteMedicalChat(MedicalChat):
     def demo_conversation(self):
         demo_questions = [
             "타이레놀 먹고 속이 아파요",
-            #"해열제 하루에 몇 번 먹어야 하나요?", 
-            #"두통에 좋은 약 추천해주세요",
+            "해열제 하루에 몇 번 먹어야 하나요?", 
+            "두통에 좋은 약 추천해주세요",
             "호흡곤란이 심해서 119 불러야 하나요?",
-            #"활명수는 언제 먹는 거예요?"
+            "활명수는 언제 먹는 거예요?"
         ]
         
         results = []
@@ -120,7 +120,7 @@ class CompleteMedicalChat(MedicalChat):
             result = self.complete_consultation(question)
             results.append(result)
             
-            # 간단한 요약 출력 (발표용)
+            # 간단한 요약 출력
             if result.get('success'):
                 analysis = result['analysis']
                 emergency = result['emergency']
@@ -148,8 +148,8 @@ class CompleteMedicalChat(MedicalChat):
         
         return results
     
+    # 단일 질문 테스트
     def quick_test(self, question):
-        """빠른 단일 질문 테스트"""
         
         if not self.rag:
             print("RAG 시스템을 먼저 구축해주세요: chatbot.setup_rag_system()")

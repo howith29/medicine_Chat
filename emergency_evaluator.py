@@ -149,70 +149,72 @@ class EmergencyEvaluator:
 
         if level >= 5:
             return """
-                응급 상황 감지
-                {base_answer}
-                응급도: Level {level} - {description}
-            {action}
+응급 상황 감지
+{base_answer}
+응급도: Level {level} - {description}
+{action}
 
-            - 119 신고 또는 가장 가까운 응급실 방문
-            - 약물 복용 즉시 중단
-            - 증상 변화 주의 깊게 관찰
+- 119 신고 또는 가장 가까운 응급실 방문
+- 약물 복용 즉시 중단
+- 증상 변화 주의 깊게 관찰
 
-            주의: 이는 의료진의 진단을 대체할 수 없습니다.
+주의: 이는 의료진의 진단을 대체할 수 없습니다.
             """
         elif level >=4:
             return """
-            주의 필요
-            {base_answer}
-            응급도: Level {level} - {description}
-            {action}
+주의 필요
+{base_answer}
+응급도: Level {level} - {description}
+{action}
 
-            - 약물 복용 즉시 중단
-            - 당일 내 병원 응급실 또는 응급진료 방문
-            - 증상 악화 시 즉시 119 신고
+- 약물 복용 즉시 중단
+- 당일 내 병원 응급실 또는 응급진료 방문
+- 증상 악화 시 즉시 119 신고
 
-            주의: 이는 의료진의 진단을 대체할 수 없습니다. 증상이 악화되면 즉시 응급실을 방문하세요.
+주의: 이는 의료진의 진단을 대체할 수 없습니다. 
+증상이 악화되면 즉시 응급실을 방문하세요.
 
             """
         elif level >= 3:
             return """
-            병원 방문 권장
-            {base_answer}
-            응급도: Level {level} - {description}
-            {action}
+병원 방문 권장
+{base_answer}
+응급도: Level {level} - {description}
+{action}
 
-            - 약물 복용 중단 고려
-            - 1-2일 내 병원 방문
-            - 증상 지속/악화 시 더 빨리 방문
-            주의: 이는 의료진의 진단을 대체할 수 없습니다. 증상이 심해지면 더 빨리 의료진과 상담하세요.
+- 약물 복용 중단 고려
+- 1-2일 내 병원 방문
+- 증상 지속/악화 시 더 빨리 방문
+주의: 이는 의료진의 진단을 대체할 수 없습니다.
+ 증상이 심해지면 더 빨리 의료진과 상담하세요.
             """
         
         elif level >= 2:
             return """
-            경과 관찰
-            {base_answer}
-            응급도: Level {level} - {description}
-            {action}
+    경과 관찰
+    {base_answer}
+    응급도: Level {level} - {description}
+    {action}
 
-            - 약물 복용 일시 중단
-            - 충분한 수분 섭취
-            - 2-3일 경과 관찰
-            - 증상 지속 시 병원 방문
-            주의: 이는 의료진의 진단을 대체할 수 없습니다. (참고) 대부분 시간이 지나면 호전됩니다.
-
+    - 약물 복용 일시 중단
+    - 충분한 수분 섭취
+    - 2-3일 경과 관찰
+    - 증상 지속 시 병원 방문
+    주의: 이는 의료진의 진단을 대체할 수 없습니다.
+    (참고) 대부분 시간이 지나면 호전됩니다.
             """
         
         else:
             return """
-            일반 상담
-            {base_answer}
-            응급도: Level {level} - {description}
-            {action}
+일반 상담
+{base_answer}
+응급도: Level {level} - {description}
+{action}
 
-            - 증상 경과 관찰
-            - 필요시 의료진 상담
+- 증상 경과 관찰
+- 필요시 의료진 상담
 
-            (참고) 일반적인 의료 상담입니다.
+(참고) 일반적인 의료 상담입니다.
             """
 
 

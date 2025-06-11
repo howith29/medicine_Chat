@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💊 약톡(YakTalk) - AI 의료 상담 챗봇</title>
+    
+    <!-- 간단하고 깔끔한 스타일 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 헤더 */
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-bottom: 3px solid #4CAF50;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+            font-weight: normal;
+        }
+
+        /* 메인 컨테이너 */
+        .container {
+            flex: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 120px);
+        }
+
+        /* 채팅 영역 */
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #4CAF50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+
+        /* 메시지 스타일 */
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: #3498db;
+            color: white;
+        }
+
+        .message.bot .message-avatar {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 15px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+        }
+
+        .message.user .message-content {
+            background: #3498db;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #2c3e50;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 5px;
+        }
+
+        /* 응급도 표시 */
+        .emergency-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+
+        /* 입력 영역 */
+        .chat-input {
+            padding: 1rem;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #4CAF50;
+        }
+
+        .input-group button {
+            padding: 0.75rem 1.5rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            min-width: 80px;
+        }
+
+        .input-group button:hover:not(:disabled) {
+            background: #45a049;
+        }
+
+        .input-group button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* 로딩 애니메이션 */
+        .loading {
+            display: none;
+            padding: 1rem;
+            text-align: center;
+            color: #7f8c8d;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .loading-dots {
+            display: inline-block;
+        }
+
+        .loading-dots:after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+
+        /* 환영 메시지 */
+        .welcome-message {
+            text-align: center;
+            padding: 2rem;
+            color: #7f8c8d;
+        }
+
+        .welcome-message h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-message .examples {
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+
+        .welcome-message .example {
+            background: #f8f9fa;
+            padding: 0.5rem 1rem;
+            margin: 0.5rem 0;
+            border-radius: 10px;
+            border-left: 3px solid #4CAF50;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .welcome-message .example:hover {
+            background: #e9ecef;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+                height: calc(100vh - 100px);
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* 스크롤바 스타일 */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <div class="header">
+        <h1>
+            💊 약톡(YakTalk)
+            <span class="subtitle">AI 의료 상담 챗봇</span>
+        </h1>
+    </div>
+
+    <!-- 메인 컨테이너 -->
+    <div class="container">
+        <div class="chat-container">
+            <!-- 채팅 헤더 -->
+            <div class="chat-header">
+                "병원 가기 전, 약 먹고 이상할 때, 누구에게 물어볼까?"
+            </div>
+
+            <!-- 채팅 메시지 영역 -->
+            <div class="chat-messages" id="chatMessages">
+                <!-- 환영 메시지 -->
+                <div class="welcome-message">
+                    <h3>👋 약톡에 오신 것을 환영합니다!</h3>
+                    <p>약물 복용 중 궁금한 점이나 부작용이 있으시면 언제든 물어보세요.</p>
+                    
+                    <div class="examples">
+                        <strong>💡 이런 질문을 해보세요:</strong>
+                        <div class="example" onclick="sendExample('타이레놀 먹고 속이 아파요')">
+                            "타이레놀 먹고 속이 아파요"
+                        </div>
+                        <div class="example" onclick="sendExample('해열제 하루에 몇 번 먹어야 하나요?')">
+                            "해열제 하루에 몇 번 먹어야 하나요?"
+                        </div>
+                        <div class="example" onclick="sendExample('두통에 좋은 약 추천해주세요')">
+                            "두통에 좋은 약 추천해주세요"
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 로딩 표시 -->
+            <div class="loading" id="loading">
+                <span class="loading-dots">AI가 분석 중입니다</span>
+            </div>
+
+            <!-- 입력 영역 -->
+            <div class="chat-input">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="약물 관련 질문을 입력해주세요..." 
+                        maxlength="500"
+                        autocomplete="off"
+                    >
+                    <button id="sendButton" onclick="sendMessage()">전송</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // DOM 요소
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const loading = document.getElementById('loading');
+
+        // Enter 메세지 전송
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key == 'Enter' && !e.shiftkey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        // 예시 질문 전송
+        function sendExample(message){
+            messageInput.value = message;
+            sendMessage();
+        }
+        // 메시지 전송 함수
+        async function sendMessage(){
+            const message = messageInput.value.trim();
+
+            if(!message){
+                alret('메시지를 입력해주세요.')
+                return
+            }
+            // 메세지 처리 UI 업데이트
+            addMessage(message, 'user');
+            messageInput.value = '';
+            sendButton.disabled = true;
+            loading.classList.add('show');
+
+            // 응답 api 송수신
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type':'application/json'
+                    },
+                    body: JSON.stringify({message: message})
+                })
+
+                const data = await response.json();
+
+                if (data.success){
+                    // 성공적인 응답
+                    addBotMessage(data);
+                } else {
+                    // 오류 응답
+                    addMessage(`죄송합니다. ${data.error}`, 'bot');
+                }
+            } catch (error) {
+                console.error('Error: ', error);
+                addMessage('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요','bot')
+            } finally {
+                // UI 복원
+                sendButton.disabled = false;
+                loading.classList.remove('show');
+                messageInput.focus();
+            }
+        }
+        // 사용자 메시지 추가
+        function addMessage(text, sender) {
+            // 메인 컨테이너 생성
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            // 아바타 생성
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = sender == 'user'?'👤': '🤖';
+            // 메세지 내용 생성
+            const content = document.createElement('div');
+            content.className = 'messgae-content';
+            content.textContent = text;
+            
+            messageDiv.appendChild(avatar); // 아바타 추가
+            messageDiv.appendChild(content); // 내용 추가
+
+            chatMessages.appendChild(messageDiv); // 채팅창에 추가
+            scrollToBottom(); // 스크롤 맨 아래로
+        }
+        // 봇 메시지(약품 설명) 추가 (응급도 포함)
+        function addBotMessage(data) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = '💊';
+
+            const content = document.createElement('div');
+            content.className = 'message-content';
+
+            // 응급도 표시
+            if (data.emergency && data.emergency.level > 0) {
+                const emergencyDiv = document.createElement('div');
+                emergencyDiv.className = 'emergency-indicator';
+                emergencyDiv.style.backgroundColor = data.emergency.color;
+                emergencyDiv.textContent = `응급도: Level ${data.emergency.level}`;
+                content.appendChild(emergencyDiv);
+            }
+            // 메인 응답
+            const responseText = document.createElement('div');
+            responseText.textContent = data.message;
+            content.appendChild(responseText);
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        // 스크롤을 맨 아래로
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHight;
+        }
+        // 페이지 로드 시 대화 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            messageInput.focus();
+            // 서버 상태 체크
+            checkServerHealth();
+        });
+
+        async function checkServerHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+
+                if (data.status !== 'healthy') {
+                    addMessage('서버가 준비 중입니다. 잠시 후 다시 시도해주세요.', 'bot');
+
+                }
+            } catch (error) {
+                console.error('Health check failed: ', error);
+            }
+        }
+    </script>
+</body>
+</html>
