@@ -1,4 +1,7 @@
 
+from doctest import debug
+
+
 class EmergencyEvaluator:
     def __init__(self):
         
@@ -93,7 +96,7 @@ class EmergencyEvaluator:
             ' '.join(analysis_result.get('emergency_keywords',[]))
         ]).lower()
 
-        print(f"응급도 분석 대상 텍스트: {text_to_analyze}")
+       # print(f"응급도 분석 대상 텍스트: {text_to_analyze}")
 
         # 레벨별 점수 계산
         # 가장 많은 키워드가 매칭된 레벨 = 해당 응급도
@@ -112,18 +115,23 @@ class EmergencyEvaluator:
             level_scores[level] = score
             matched_keywords[level] = matched
 
-        print(f"레벨 점수: {level_scores}")
+       # print(f"레벨 점수: {level_scores}")
 
         max_level = 1
         max_score = 0
 
-            # 가장 높은 레벨 선택
+        # 가장 높은 레벨 선택
         for level, score in level_scores.items():
             if score > max_score:
                 max_score = score
                 max_level = level
 
-            # 매칭 키워드 없는 경우 level 2 (일반 부작용)
+        if debug:
+            print(f"응급도 분석 대상 텍스트: {text_to_analyze}")
+            print(f"레벨 점수: {level_scores}")
+            print(f"응급도 평가 결과: Level {max_level}")
+
+        # 매칭 키워드 없는 경우 level 2 (일반 부작용)
         if max_score == 0:
             max_level = 2
             reasoning = "일반적인 부작용으로 추정"
@@ -139,84 +147,59 @@ class EmergencyEvaluator:
             'reasoning': reasoning,
             'matched_keywords': final_matched
         }
-        print(f"응급도 평가 결과: Level {max_level}")
 
         return result
         
-    # 응급도에 따른 응답
-    def get_response(self, emergency_result):
+    # 응급도에 따른 응답 (개선)
+    def get_response(self, emergency_result, base_answer):
         level = emergency_result['level']
 
         if level >= 5:
-            return """
-응급 상황 감지
+            return f"""🚨응급상황 감지
 {base_answer}
-응급도: Level {level} - {description}
-{action}
 
-- 119 신고 또는 가장 가까운 응급실 방문
-- 약물 복용 즉시 중단
-- 증상 변화 주의 깊게 관찰
+🚨 즉시 119 신고하거나 응급실 방문하세요
+• 약물 복용 즉시 중단
+• 증상 변화 주의 깊게 관찰"""
 
-주의: 이는 의료진의 진단을 대체할 수 없습니다.
-            """
-        elif level >=4:
-            return """
-주의 필요
+        elif level >= 4:
+            return f"""⚠️ 주의 필요
 {base_answer}
-응급도: Level {level} - {description}
-{action}
-
-- 약물 복용 즉시 중단
-- 당일 내 병원 응급실 또는 응급진료 방문
-- 증상 악화 시 즉시 119 신고
-
-주의: 이는 의료진의 진단을 대체할 수 없습니다. 
-증상이 악화되면 즉시 응급실을 방문하세요.
-
-            """
+⚠️ 당일 내 응급실 방문이 필요합니다
+• 약물 복용 즉시 중단
+• 증상 악화 시 즉시 119 신고"""
+        
         elif level >= 3:
-            return """
-병원 방문 권장
+            return f"""⚠️ 병원 방문 권장
 {base_answer}
-응급도: Level {level} - {description}
-{action}
-
-- 약물 복용 중단 고려
-- 1-2일 내 병원 방문
-- 증상 지속/악화 시 더 빨리 방문
-주의: 이는 의료진의 진단을 대체할 수 없습니다.
- 증상이 심해지면 더 빨리 의료진과 상담하세요.
-            """
+🏥 1-2일 내 병원 방문을 권장합니다
+• 증상 지속/악화 시 더 빨리 방문"""
         
         elif level >= 2:
-            return """
-    경과 관찰
-    {base_answer}
-    응급도: Level {level} - {description}
-    {action}
-
-    - 약물 복용 일시 중단
-    - 충분한 수분 섭취
-    - 2-3일 경과 관찰
-    - 증상 지속 시 병원 방문
-    주의: 이는 의료진의 진단을 대체할 수 없습니다.
-    (참고) 대부분 시간이 지나면 호전됩니다.
-            """
+            return f"""👀 경과 관찰
+{base_answer}
+👀 2-3일 경과 관찰 후 지속되면 병원 방문하세요
+• 대부분 시간이 지나면 호전됩니다"""
         
         else:
-            return """
-일반 상담
-{base_answer}
-응급도: Level {level} - {description}
-{action}
+            return base_answer
+        
+    # 질문 유형별 응답 생성
+    def get_response_by_type(self, analysis, base_answer, emergency_result= None):
+        query_type = analysis.get('query_type', 'other')
 
-- 증상 경과 관찰
-- 필요시 의료진 상담
-
-(참고) 일반적인 의료 상담입니다.
-            """
-
+        if query_type == 'side_effect':
+            return self.get_response(emergency_result, base_answer)
+        elif query_type == 'usage':
+            return f"""복용법 안내: 
+{base_answer}"""
+        elif query_type == 'efficacy':
+            return f"""약물 정보: 
+{base_answer}"""
+        else:
+            return f"""일반 상담: 
+{base_answer}"""
+        
 
 # 응급도 평가 테스트
 def test_emergency_evaluation():

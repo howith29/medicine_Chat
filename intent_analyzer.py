@@ -35,7 +35,7 @@ class MedicalIntentAnalyzer:
         query_type 분류 기준:
         - side_effect: 부작용, 이상반응, "먹고 아파요", "복용 후 증상" 등
         - usage: 복용법, 사용법, "어떻게 먹어야", "몇 번", "언제" 등  
-        - efficacy: 효능, 효과, "어떤 약", "추천", "좋은 약" 등
+        - efficacy: 효능, 효과, "어떤 약", "추천", "좋은 약", "무슨 약", "약 먹어야" 등
         - other: 위에 해당하지 않는 경우
         """
 
@@ -74,7 +74,7 @@ class MedicalIntentAnalyzer:
 
         return found_keywords
 
-# 기존 RAG + 의도 분석   
+# 기존 RAG + 의도 분석 
 class MedicalChat:
     def __init__(self, rag_system):
         self.rag = rag_system

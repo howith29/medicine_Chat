@@ -8,7 +8,6 @@ class CompleteMedicalChat(MedicalChat):
         super().__init__(rag_system)
 
         # 응급도 평가 추가
-        # (응급도 평가가 나중에 만들어서여..)
         self.emergency_evaluator = EmergencyEvaluator()
 
     def setup_rag_system(self, csv_path="drug_info.csv", chunk_size=300, chunk_overlap=30):
@@ -23,8 +22,7 @@ class CompleteMedicalChat(MedicalChat):
             split_docs = self.rag.split_documents(chunk_size, chunk_overlap)
             # 임베딩 생성 및 벡터스토어 구축
             vectorstore = self.rag.create_vectorstore(split_docs)
-            # QA 체인 설정
-            qa_chain = self.rag.setup_qa_chain()
+
 
             return True
         
@@ -66,17 +64,18 @@ class CompleteMedicalChat(MedicalChat):
             print(f"강화된 검색어: {enhanced_query}")
 
             # 기존 RAG 답변 생성
-            rag_result = self.rag.ask_question(user_question)
+            rag_result = self.rag.ask_question(user_question, analysis['query_type'])
             base_answer = rag_result['result'] if rag_result else "관련 정보를 찾을 수 없습니다."
 
             # 최종 응답 생성
-            response_template = self.emergency_evaluator.get_response(emergency_result)
-            final_response = response_template.format(
-                base_answer=base_answer,
-                level=emergency_result['level'],
-                description=emergency_result['description'],
-                action=emergency_result['action']
-            )
+            # response_template = self.emergency_evaluator.get_response(emergency_result)
+            # final_response = response_template.format(
+            #     base_answer=base_answer,
+            #     level=emergency_result['level'],
+            #     description=emergency_result['description'],
+            #     action=emergency_result['action']
+            # )
+            final_response = self.emergency_evaluator.get_response_by_type(analysis, base_answer, emergency_result)
 
             # 결과 정리
             result = {
