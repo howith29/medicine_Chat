@@ -17,7 +17,7 @@ LangChain + OpenAI 기반 약물 복용 및 부작용 상담 챗봇
 | 팀원 | 역할 |
 |-----|------|
 |👸[슬희](https://github.com/howith29)| [기획 및 시스템 구현] 프로젝트 기획, 시스템 아키텍처 설계 및 구현 |
-|👸[승주][(https://github.com/haseungju)| [데이터 엔지니어링 및 AI 모델 최적화] 데이터 수집/전처리, RAG 시스템 및 LLM 성능 최적화 |
+|👸[승주](https://github.com/haseungju)| [데이터 엔지니어링 및 AI 모델 최적화] 데이터 수집/전처리, RAG 시스템 및 LLM 성능 최적화 |
 <br/>
 
 ## 📂 파일 구성
